@@ -140,3 +140,23 @@ a {
 .animate-spin {
   animation: spin 0.8s linear infinite;
 }
+
+.phone-field { position: relative; display: flex; flex-direction: column; margin-bottom: 18px; text-align: left; }
+.phone-field__label { margin-bottom: 6px; color: var(--text-primary); font-size: 13px; font-weight: 600; }
+.phone-field__label span { color: #dc2626; }
+.phone-field__control { position: relative; display: flex; align-items: stretch; min-width: 0; height: 46px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--bg-card, var(--bg-surface)); }
+.phone-field__control:focus-within { border-color: var(--border-focus); box-shadow: 0 0 0 2px var(--border-active); }
+.phone-field__control--error { border-color: #dc2626; }
+.phone-field__country-button { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; padding: 0 10px; color: var(--text-primary); border-right: 1px solid var(--border-subtle); font-size: 13px; }
+.phone-field__country-button:focus-visible, .phone-field__option:focus-visible { outline: 2px solid var(--border-focus); outline-offset: -2px; }
+.phone-field__control .react-international-phone-input-container { flex: 1; min-width: 0; }
+.phone-field__control .phone-field__input { width: 100%; height: 44px; padding: 0 12px; border: 0; border-radius: 0 8px 8px 0; background: transparent; color: var(--text-primary); font: inherit; font-size: 14px; outline: none; }
+.phone-field__menu { position: absolute; z-index: 20; top: 50px; left: 0; width: min(340px, calc(100vw - 48px)); max-height: 300px; overflow: hidden; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--bg-surface); box-shadow: var(--shadow-lg); }
+.phone-field__search { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); }
+.phone-field__search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text-primary); font-size: 13px; }
+.phone-field__options { max-height: 252px; overflow-y: auto; padding: 4px; }
+.phone-field__option { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px; border-radius: 5px; color: var(--text-primary); text-align: left; font-size: 13px; }
+.phone-field__option:hover, .phone-field__option[aria-selected="true"] { background: var(--bg-primary); }
+.phone-field__dial { margin-left: auto; color: var(--text-secondary); }
+.phone-field__empty, .phone-field__message, .phone-field__helper { padding-top: 5px; color: var(--text-secondary); font-size: 12px; }
+.phone-field__message { color: #dc2626; }

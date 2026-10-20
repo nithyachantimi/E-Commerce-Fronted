@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../api/authService';
 import { AuthCard } from '../components/AuthCard';
 import { PasswordInput } from '../components/PasswordInput';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { AlertBanner } from '../components/AlertBanner';
 import { ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { useRecovery } from '../context/RecoveryContext';
 
 export const ResetPasswordPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { recoveryToken, setRecoveryToken } = useRecovery();
+
 
   const [formData, setFormData] = useState({
     newPassword: '',
@@ -30,13 +32,13 @@ export const ResetPasswordPage = () => {
     setError('');
     setSuccessMsg('');
 
-    if (!location.state?.recoveryToken) {
+    if (!recoveryToken) {
       setError('Recovery authorization is missing. Request and verify a new code first.');
       return;
     }
 
-    if (!formData.newPassword || formData.newPassword.length < 8) {
-      setError('New password must be at least 8 characters long');
+    if (!/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!._-]).{8,100}$/.test(formData.newPassword)) {
+      setError('New password must be 8–100 characters and include uppercase, lowercase, a number, and a special character.');
       return;
     }
     if (formData.newPassword !== formData.confirmPassword) {
@@ -47,12 +49,13 @@ export const ResetPasswordPage = () => {
     setLoading(true);
     try {
       const res = await authService.resetPassword(
-        location.state.recoveryToken,
+        recoveryToken,
         formData.newPassword,
         formData.confirmPassword
       );
 
       setSuccessMsg(res.message || 'Password updated successfully! Redirecting...');
+      setRecoveryToken(null);
       setTimeout(() => {
         navigate('/login', {
           state: { message: 'Password reset successful. Please sign in with your new password.' },
@@ -106,7 +109,7 @@ export const ResetPasswordPage = () => {
         </PrimaryButton>
 
         <div style={styles.footer}>
-          <Link to="/login" style={styles.loginLink}>
+          <Link to="/login" style={styles.loginLink} onClick={() => setRecoveryToken(null)}>
             Cancel and Return to Sign In
           </Link>
         </div>

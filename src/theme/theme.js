@@ -1,22 +1,33 @@
 import { createTheme } from '@mui/material/styles';
 
-const lightTokens = {
-  primary: '#2874f0',
-  background: '#f5f7fa',
-  card: '#ffffff',
-  textPrimary: '#172337',
-  textSecondary: '#526174',
-  border: '#e2e8f0',
-  success: '#16a34a',
-  error: '#dc2626',
+export const lightTokens = {
+  primary: '#2563EB',
+  background: '#F8FAFC',
+  card: '#FFFFFF',
+  textPrimary: '#0F172A',
+  textSecondary: '#64748B',
+  border: '#E2E8F0',
+  success: '#16A34A',
+  error: '#DC2626',
 };
 
-export const createAppTheme = () => {
-  const tokens = lightTokens;
+export const darkTokens = {
+  primary: '#3B82F6',
+  background: '#0F172A',
+  card: '#1E293B',
+  textPrimary: '#F8FAFC',
+  textSecondary: '#94A3B8',
+  border: '#334155',
+  success: '#22C55E',
+  error: '#F87171',
+};
+
+export const createAppTheme = (mode = 'light') => {
+  const tokens = mode === 'dark' ? darkTokens : lightTokens;
 
   return createTheme({
     palette: {
-      mode: 'light',
+      mode,
       primary: { main: tokens.primary },
       background: { default: tokens.background, paper: tokens.card },
       text: { primary: tokens.textPrimary, secondary: tokens.textSecondary },
@@ -36,13 +47,28 @@ export const createAppTheme = () => {
       MuiCard: {
         styleOverrides: {
           root: {
+            backgroundColor: tokens.card,
             border: `1px solid ${tokens.border}`,
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+            boxShadow: mode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.4)' : '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+            color: tokens.textPrimary,
           },
         },
       },
-      MuiButton: { styleOverrides: { root: { height: '44px', borderRadius: '8px' } } },
-      MuiOutlinedInput: { styleOverrides: { root: { borderRadius: '8px' } } },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            height: '44px',
+            borderRadius: '8px',
+          },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            borderRadius: '8px',
+          },
+        },
+      },
     },
   });
 };

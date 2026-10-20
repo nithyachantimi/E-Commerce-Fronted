@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { isValidPhoneNumber } from 'libphonenumber-js/max';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { AuthCard } from '../components/AuthCard';
@@ -7,17 +8,16 @@ import { PasswordInput } from '../components/PasswordInput';
 import { PhoneNumberInput } from '../components/PhoneNumberInput';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { AlertBanner } from '../components/AlertBanner';
-import { UserPlus, Mail, ShieldCheck } from 'lucide-react';
+import { UserPlus, Mail, ShieldCheck, User } from 'lucide-react';
 
 export const RegisterPage = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
-    countryCode: '+91',
+    phoneRegion: 'IN',
     phoneNumber: '',
     password: '',
     confirmPassword: '',
@@ -35,11 +35,13 @@ export const RegisterPage = () => {
     }
   };
 
+  const handleCountryChange = ({ region }) => setFormData((prev) => ({ ...prev, phoneRegion: region }));
+
   const validate = () => {
     const errors = {};
-    const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-    if (fullName.length < 3 || fullName.length > 100) {
-      errors.firstName = 'Enter a full name between 3 and 100 characters';
+    const trimmedName = formData.fullName.trim();
+    if (trimmedName.length < 3 || trimmedName.length > 100) {
+      errors.fullName = 'Full name must be between 3 and 100 characters';
     }
 
     if (!formData.email.trim()) {
@@ -49,17 +51,15 @@ export const RegisterPage = () => {
     }
 
     if (!formData.phoneNumber.trim()) {
-      errors.phoneNumber = 'Phone number is required';
-    } else if (formData.phoneNumber.trim().length < 7) {
-      errors.phoneNumber = 'Phone number must be at least 7 digits';
+      errors.phoneNumber = 'Mobile number is required';
+    } else if (!isValidPhoneNumber(formData.phoneNumber)) {
+      errors.phoneNumber = 'Enter a valid mobile number for the selected country';
     }
 
     if (!formData.password) {
       errors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!._-])/.test(formData.password)) {
-      errors.password = 'Must include uppercase, lowercase, number, and special character';
+    } else if (!/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!._-]).{8,100}$/.test(formData.password)) {
+      errors.password = 'Must be 8–100 characters and include uppercase, lowercase, a number, and a special character';
     }
 
     if (!formData.confirmPassword) {
@@ -80,20 +80,11 @@ export const RegisterPage = () => {
 
     setLoading(true);
     try {
-      const fullPhoneNumber = `${formData.countryCode}${formData.phoneNumber.trim()}`;
-      const regionByCallingCode = {
-        '+1': 'US',
-        '+44': 'GB',
-        '+49': 'DE',
-        '+61': 'AU',
-        '+91': 'IN',
-        '+971': 'AE',
-      };
       await register({
-        fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-        email: formData.email,
-        mobileNumber: fullPhoneNumber,
-        phoneRegion: regionByCallingCode[formData.countryCode],
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
+        mobileNumber: formData.phoneNumber,
+        phoneRegion: formData.phoneRegion,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
       });
@@ -108,17 +99,11 @@ export const RegisterPage = () => {
         err.response?.data?.error ||
         err.message ||
         'Registration failed. Please check your details.';
-      
-      if (err.response?.data?.validationErrors) {
-        const serverErrors = err.response.data.validationErrors;
-        setValidationErrors((current) => ({
-          ...current,
-          ...(serverErrors.fullName ? { firstName: serverErrors.fullName } : {}),
-          ...(serverErrors.mobileNumber ? { phoneNumber: serverErrors.mobileNumber } : {}),
-          ...(serverErrors.email ? { email: serverErrors.email } : {}),
-          ...(serverErrors.password ? { password: serverErrors.password } : {}),
-          ...(serverErrors.confirmPassword ? { confirmPassword: serverErrors.confirmPassword } : {}),
-        }));
+
+      if (err.response?.data?.fieldErrors) {
+        setValidationErrors(err.response.data.fieldErrors);
+      } else if (err.response?.data?.validationErrors) {
+        setValidationErrors(err.response.data.validationErrors);
       }
       setError(serverMsg);
     } finally {
@@ -128,43 +113,32 @@ export const RegisterPage = () => {
 
   return (
     <AuthCard
-      title="Create Account"
-      subtitle="Create an account to continue"
+      title="Create an account"
+      subtitle="Register to start using the e-commerce platform"
       icon={UserPlus}
     >
-      <AlertBanner
-        type="error"
-        message={error}
-        onClose={() => setError('')}
-      />
+      <AlertBanner type="error" message={error} onClose={() => setError('')} />
 
       <form onSubmit={handleSubmit} noValidate>
-        {/* First & Last Name */}
-        <div style={styles.nameRow}>
-          <FormInput
-            id="firstName"
-            label="First Name"
-            placeholder="John"
-            value={formData.firstName}
-            onChange={handleChange}
-            error={validationErrors.firstName}
-          />
-          <FormInput
-            id="lastName"
-            label="Last Name"
-            placeholder="Doe"
-            value={formData.lastName}
-            onChange={handleChange}
-            error={validationErrors.lastName}
-          />
-        </div>
+        {/* Full Name */}
+        <FormInput
+          id="fullName"
+          label="Full Name"
+          placeholder="e.g. John Doe"
+          value={formData.fullName}
+          onChange={handleChange}
+          error={validationErrors.fullName}
+          icon={User}
+          required
+          autoComplete="name"
+        />
 
         {/* Email */}
         <FormInput
           id="email"
           type="email"
           label="Email Address"
-          placeholder="john.doe@example.com"
+          placeholder="name@example.com"
           value={formData.email}
           onChange={handleChange}
           error={validationErrors.email}
@@ -176,11 +150,15 @@ export const RegisterPage = () => {
         {/* International Phone */}
         <PhoneNumberInput
           id="phoneNumber"
-          label="Phone Number"
+          label="International Mobile Number"
           countryCode={formData.countryCode}
-          onCountryCodeChange={(code) => setFormData((p) => ({ ...p, countryCode: code }))}
+          phoneRegion={formData.phoneRegion}
+          onCountryChange={handleCountryChange}
           value={formData.phoneNumber}
-          onChange={handleChange}
+          onChange={(phoneNumber) => {
+            setFormData((prev) => ({ ...prev, phoneNumber }));
+            if (validationErrors.phoneNumber) setValidationErrors((prev) => ({ ...prev, phoneNumber: null }));
+          }}
           error={validationErrors.phoneNumber}
           required
         />
@@ -189,7 +167,7 @@ export const RegisterPage = () => {
         <PasswordInput
           id="password"
           label="Password"
-          placeholder="Min 8 chars, 1 upper, 1 special"
+          placeholder="At least 8 characters (Aa1@)"
           value={formData.password}
           onChange={handleChange}
           error={validationErrors.password}
@@ -198,6 +176,7 @@ export const RegisterPage = () => {
           autoComplete="new-password"
         />
 
+        {/* Confirm Password */}
         <PasswordInput
           id="confirmPassword"
           label="Confirm Password"
@@ -215,7 +194,7 @@ export const RegisterPage = () => {
           loading={loading}
           icon={ShieldCheck}
         >
-          Create My Account
+          Create Account
         </PrimaryButton>
 
         <div style={styles.footer}>
@@ -230,13 +209,8 @@ export const RegisterPage = () => {
 };
 
 const styles = {
-  nameRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '12px',
-  },
   footer: {
-    marginTop: '28px',
+    marginTop: '24px',
     textAlign: 'center',
     fontSize: '14px',
     display: 'flex',
@@ -248,7 +222,8 @@ const styles = {
     color: 'var(--text-secondary)',
   },
   loginLink: {
-    color: '#1d5fc7',
+    color: 'var(--primary-color, #2563EB)',
     fontWeight: '600',
+    textDecoration: 'none',
   },
 };

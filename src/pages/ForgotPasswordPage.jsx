@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
+import { isValidPhoneNumber } from 'libphonenumber-js/max';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../api/authService';
 import { AuthCard } from '../components/AuthCard';
 import { FormInput } from '../components/FormInput';
+import { PhoneNumberInput } from '../components/PhoneNumberInput';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { AlertBanner } from '../components/AlertBanner';
-import { KeyRound, Mail, ArrowLeft, Send } from 'lucide-react';
+import { KeyRound, Mail, Phone, ArrowLeft, Send } from 'lucide-react';
 
 export const ForgotPasswordPage = () => {
   const navigate = useNavigate();
 
-  const [identifier, setIdentifier] = useState('');
+  const [mode, setMode] = useState('email'); // 'email' | 'phone'
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneRegion, setPhoneRegion] = useState('IN');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -20,19 +26,33 @@ export const ForgotPasswordPage = () => {
     setError('');
     setSuccessMsg('');
 
-    if (!identifier.trim()) {
-      setError('Enter the email address or international phone number on your account.');
-      return;
+    let identifier = '';
+    if (mode === 'email') {
+      if (!email.trim()) {
+        setError('Please enter your account email address.');
+        return;
+      }
+      identifier = email.trim();
+    } else {
+      if (!isValidPhoneNumber(phoneNumber)) {
+        setError('Please enter a valid international mobile number.');
+        return;
+      }
+      identifier = phoneNumber;
     }
 
     setLoading(true);
     try {
-      const res = await authService.forgotPassword(identifier.trim());
-      setSuccessMsg(res.message || 'If an account exists, a recovery code has been sent.');
-      setTimeout(() => navigate('/verify-otp', { state: { identifier: identifier.trim() } }), 800);
+      const res = await authService.forgotPassword(identifier);
+      setSuccessMsg(
+        res.message || 'If an account exists, follow the configured recovery steps. Continue to verify a code if one is available.'
+      );
+      setTimeout(() => {
+        navigate('/verify-otp', { state: { identifier } });
+      }, 1000);
     } catch (err) {
       setError(
-        err.response?.data?.message || 'Unable to process reset request. Please try again later.'
+        err.response?.data?.message || 'Unable to process recovery request. Please try again later.'
       );
     } finally {
       setLoading(false);
@@ -41,25 +61,72 @@ export const ForgotPasswordPage = () => {
 
   return (
     <AuthCard
-      title="Reset Password"
-      subtitle="Enter your account email or international phone number to request a recovery code"
+      title="Forgot Password"
+      subtitle="Initiate account recovery via email or mobile number"
       icon={KeyRound}
     >
       <AlertBanner type="error" message={error} onClose={() => setError('')} />
       <AlertBanner type="success" message={successMsg} onClose={() => setSuccessMsg('')} />
 
+      {/* Mode Switcher */}
+      <div style={styles.tabRow}>
+        <button
+          type="button"
+          onClick={() => {
+            setMode('email');
+            setError('');
+          }}
+          style={{
+            ...styles.tabBtn,
+            backgroundColor: mode === 'email' ? 'var(--primary-color, #2563EB)' : 'transparent',
+            color: mode === 'email' ? '#ffffff' : 'var(--text-secondary)',
+          }}
+        >
+          <Mail size={14} />
+          <span>Email Address</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMode('phone');
+            setError('');
+          }}
+          style={{
+            ...styles.tabBtn,
+            backgroundColor: mode === 'phone' ? 'var(--primary-color, #2563EB)' : 'transparent',
+            color: mode === 'phone' ? '#ffffff' : 'var(--text-secondary)',
+          }}
+        >
+          <Phone size={14} />
+          <span>Mobile Number</span>
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} noValidate>
-        <FormInput
-          id="identifier"
-          type="text"
-          label="Email or Phone Number"
-          placeholder="name@example.com or +14155552671"
-          value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
-          icon={Mail}
-          required
-          autoComplete="email"
-        />
+        {mode === 'email' ? (
+          <FormInput
+            id="email"
+            type="email"
+            label="Email Address"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            icon={Mail}
+            required
+            autoComplete="email"
+          />
+        ) : (
+          <PhoneNumberInput
+            id="recoveryPhone"
+            label="International Mobile Number"
+            countryCode={countryCode}
+            phoneRegion={phoneRegion}
+            onCountryChange={({ region }) => setPhoneRegion(region)}
+            value={phoneNumber}
+            onChange={setPhoneNumber}
+            required
+          />
+        )}
 
         <PrimaryButton
           id="btn-forgot-submit"
@@ -73,7 +140,7 @@ export const ForgotPasswordPage = () => {
         <div style={styles.footer}>
           <Link to="/login" style={styles.backLink}>
             <ArrowLeft size={16} />
-            <span>Return to Sign In</span>
+            <span>Back to Sign In</span>
           </Link>
         </div>
       </form>
@@ -82,8 +149,31 @@ export const ForgotPasswordPage = () => {
 };
 
 const styles = {
+  tabRow: {
+    display: 'flex',
+    backgroundColor: 'var(--bg-primary)',
+    borderRadius: '8px',
+    padding: '4px',
+    marginBottom: '20px',
+    border: '1px solid var(--border-subtle)',
+    gap: '4px',
+  },
+  tabBtn: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    padding: '8px',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  },
   footer: {
-    marginTop: '28px',
+    marginTop: '24px',
     textAlign: 'center',
     fontSize: '14px',
   },
@@ -93,6 +183,6 @@ const styles = {
     gap: '8px',
     color: 'var(--text-secondary)',
     fontWeight: '500',
-    transition: 'color 0.2s',
+    textDecoration: 'none',
   },
 };

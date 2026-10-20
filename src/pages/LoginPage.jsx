@@ -33,7 +33,7 @@ export const LoginPage = () => {
   const validate = () => {
     const errors = {};
     if (!formData.identifier.trim()) {
-      errors.identifier = 'Email or mobile number is required';
+      errors.identifier = 'Email or international phone number is required';
     }
     if (!formData.password) {
       errors.password = 'Password is required';
@@ -58,7 +58,7 @@ export const LoginPage = () => {
         err.response?.data?.message ||
         err.response?.data?.error ||
         err.message ||
-        'Authentication failed. Please check your credentials.';
+        'Invalid identifier or password. Please try again.';
       setError(serverMsg);
     } finally {
       setLoading(false);
@@ -67,7 +67,7 @@ export const LoginPage = () => {
 
   return (
     <AuthCard
-      title="Welcome Back"
+      title="Welcome back"
       subtitle="Sign in to access your account"
       icon={LogIn}
     >
@@ -80,8 +80,8 @@ export const LoginPage = () => {
       <form onSubmit={handleSubmit} noValidate>
         <FormInput
           id="identifier"
-          label="Email or Mobile Number"
-          placeholder="e.g., user@example.com or +14155552671"
+          label="Email or International Phone"
+          placeholder="name@example.com or +919876543210"
           value={formData.identifier}
           onChange={handleChange}
           error={validationErrors.identifier}
@@ -93,7 +93,7 @@ export const LoginPage = () => {
         <PasswordInput
           id="password"
           label="Password"
-          placeholder="••••••••"
+          placeholder="Enter your password"
           value={formData.password}
           onChange={handleChange}
           error={validationErrors.password}
@@ -102,12 +102,9 @@ export const LoginPage = () => {
         />
 
         <div style={styles.optionsRow}>
-          <label style={styles.rememberLabel}>
-            <input type="checkbox" style={styles.checkbox} />
-            <span>Remember this device</span>
-          </label>
+          <div />
           <Link to="/forgot-password" style={styles.forgotLink}>
-            Forgot password?
+            Forgot Password?
           </Link>
         </div>
 
@@ -121,7 +118,7 @@ export const LoginPage = () => {
         </PrimaryButton>
 
         <div style={styles.footer}>
-          <span style={styles.footerText}>New here?</span>
+          <span style={styles.footerText}>Don't have an account?</span>
           <Link to="/register" style={styles.registerLink}>
             Create an account
           </Link>
@@ -136,27 +133,16 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '24px',
+    marginBottom: '20px',
     fontSize: '13px',
   },
-  rememberLabel: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    color: 'var(--text-secondary)',
-    cursor: 'pointer',
-  },
-  checkbox: {
-    accentColor: '#2874f0',
-    cursor: 'pointer',
-  },
   forgotLink: {
-    color: '#1d5fc7',
+    color: 'var(--primary-color, #2563EB)',
     fontWeight: '500',
-    transition: 'color 0.2s',
+    textDecoration: 'none',
   },
   footer: {
-    marginTop: '28px',
+    marginTop: '24px',
     textAlign: 'center',
     fontSize: '14px',
     display: 'flex',
@@ -168,7 +154,8 @@ const styles = {
     color: 'var(--text-secondary)',
   },
   registerLink: {
-    color: '#1d5fc7',
+    color: 'var(--primary-color, #2563EB)',
     fontWeight: '600',
+    textDecoration: 'none',
   },
 };
