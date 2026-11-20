@@ -1,4 +1,6 @@
-# E-Commerce Frontend — React + Vite Authentication System
+# E-Commerce-Fronted
+
+## E-Commerce Frontend — React + Vite Authentication System
 
 A modern, responsive e-commerce authentication interface built with **React 19**, **Vite 8**, **Material UI (MUI) 9**, and **React Router 7** using pure JavaScript.
 
